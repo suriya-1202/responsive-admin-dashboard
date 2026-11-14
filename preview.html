@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NexusPulse • Enterprise Admin Dashboard</title>
+  <!-- Google Fonts: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <!-- React & Babel CDNs for instant standalone preview without node server -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <link rel="stylesheet" href="./src/index.css">
+</head>
+
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useMemo, useRef, useEffect } = React;
+
+    // --- CLEAN SVG ICONS (ZERO EXTERNAL PHOTO DEPENDENCIES) ---
+    const LayoutDashboard = ({ size = 18, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg>
+    );
+    const UsersIcon = ({ size = 18, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.87" /><path d="M16 3.13a4 4 0 0 1 0 7.75" /></svg>
+    );
+    const FileBarChart = ({ size = 18, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" /><path d="M14 2v4a2 2 0 0 0 2 2h4" /><path d="M8 18v-2" /><path d="M12 18v-4" /><path d="M16 18v-6" /></svg>
+    );
+    const SettingsIcon = ({ size = 18, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+    );
+    const Search = ({ size = 16, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+    );
+    const Bell = ({ size = 18, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>
+    );
+    const TrendingUp = ({ size = 13 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17" /><polyline points="16 7 22 7 22 13" /></svg>
+    );
+    const TrendingDown = ({ size = 13 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 17 13.5 8.5 8.5 13.5 2 7" /><polyline points="16 17 22 17 22 11" /></svg>
+    );
+    const DollarSign = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></svg>
+    );
+    const ShoppingBag = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+    );
+    const Activity = ({ size = 20 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg>
+    );
+    const Download = ({ size = 15 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" x2="12" y1="15" y2="3" /></svg>
+    );
+    const ChevronDown = ({ size = 14 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6" /></svg>
+    );
+    const ChevronLeft = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+    );
+    const ChevronRight = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6" /></svg>
+    );
+    const Menu = ({ size = 22 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="18" y2="18" /></svg>
+    );
+    const X = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+    );
+    const ArrowUpDown = ({ size = 12 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4" /><path d="M17 20V4" /><path d="m3 8 4-4 4 4" /><path d="M7 4v16" /></svg>
+    );
+    const Eye = ({ size = 15 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" /><circle cx="12" cy="12" r="3" /></svg>
+    );
+    const Trash2 = ({ size = 15 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /><line x1="10" x2="10" y1="11" y2="17" /><line x1="14" x2="14" y1="11" y2="17" /></svg>
+    );
+    const Zap = ({ size = 18 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+    );
+    const Shield = ({ size = 14 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10" /></svg>
+    );
+    const User = ({ size = 16, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+    );
+    const PanelLeftClose = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /><path d="m16 15-3-3 3-3" /></svg>
+    );
+    const PanelLeftOpen = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" /><path d="M9 3v18" /><path d="m13 9 3 3-3 3" /></svg>
+    );
+    const CreditCard = ({ size = 16, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect width="20" height="14" x="2" y="5" rx="2" /><line x1="2" x2="22" y1="10" y2="10" /></svg>
+    );
+    const Check = ({ size = 16, className = "" }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="20 6 9 17 4 12" /></svg>
+    );
+    const Calendar = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2" /><line x1="16" x2="16" y1="2" y2="6" /><line x1="8" x2="8" y1="2" y2="6" /><line x1="3" x2="21" y1="10" y2="10" /></svg>
+    );
+    const FileText = ({ size = 16 }) => (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" /><polyline points="14 2 14 8 20 8" /><line x1="16" x2="8" y1="13" y2="13" /><line x1="16" x2="8" y1="17" y2="17" /><polyline points="10 9 9 9 8 9" /></svg>
+    );
+
+    // --- DATASETS (NO IMAGE URLS) ---
+    const timeframeData = {
+      '7D': [
+        { id: 'users', title: 'Total Users', value: '14,820', change: '+6.4%', isPositive: true, subtext: '890 new registrations this week', iconType: 'users', accentColor: 'blue', sparkline: [22, 28, 32, 30, 42, 45, 50] },
+        { id: 'revenue', title: 'Total Revenue', value: '$42,850.00', change: '+11.2%', isPositive: true, subtext: 'Daily average: $6,121.40', iconType: 'dollar', accentColor: 'emerald', sparkline: [45, 52, 48, 60, 58, 65, 70] },
+        { id: 'orders', title: 'Total Orders', value: '3,140', change: '+9.5%', isPositive: true, subtext: '99.8% on-time fulfillment', iconType: 'orders', accentColor: 'purple', sparkline: [30, 36, 32, 44, 40, 48, 52] },
+        { id: 'growth', title: 'Growth Rate', value: '31.2%', change: '+5.8%', isPositive: true, subtext: 'Accelerating enterprise pipeline', iconType: 'growth', accentColor: 'amber', sparkline: [24, 26, 27, 28, 29, 30, 31.2] }
+      ],
+      '30D': [
+        { id: 'users', title: 'Total Users', value: '48,294', change: '+14.6%', isPositive: true, subtext: '3,842 new active this month', iconType: 'users', accentColor: 'blue', sparkline: [35, 42, 40, 52, 58, 55, 68, 74, 82, 91] },
+        { id: 'revenue', title: 'Total Revenue', value: '$184,320.00', change: '+8.2%', isPositive: true, subtext: 'Monthly target reached: 92.1%', iconType: 'dollar', accentColor: 'emerald', sparkline: [120, 132, 128, 145, 142, 160, 155, 172, 178, 184] },
+        { id: 'orders', title: 'Total Orders', value: '12,845', change: '+18.7%', isPositive: true, subtext: '99.4% fulfillment rate', iconType: 'orders', accentColor: 'purple', sparkline: [62, 68, 74, 71, 85, 92, 88, 104, 115, 128] },
+        { id: 'growth', title: 'Growth Rate', value: '28.4%', change: '+4.1%', isPositive: true, subtext: 'Industry benchmark: Top 5%', iconType: 'growth', accentColor: 'amber', sparkline: [18, 20, 21, 23, 22, 25, 26, 27, 28, 28.4] }
+      ],
+      '90D': [
+        { id: 'users', title: 'Total Users', value: '112,400', change: '+22.8%', isPositive: true, subtext: '18,400 net new users', iconType: 'users', accentColor: 'blue', sparkline: [60, 68, 75, 82, 90, 98, 105, 112] },
+        { id: 'revenue', title: 'Total Revenue', value: '$512,940.00', change: '+16.5%', isPositive: true, subtext: 'Enterprise annual renewals: 96%', iconType: 'dollar', accentColor: 'emerald', sparkline: [380, 410, 430, 460, 480, 500, 512] },
+        { id: 'orders', title: 'Total Orders', value: '36,210', change: '+14.2%', isPositive: true, subtext: 'Average deal size: $1,416.00', iconType: 'orders', accentColor: 'purple', sparkline: [220, 245, 270, 300, 325, 350, 362] },
+        { id: 'growth', title: 'Growth Rate', value: '26.8%', change: '+3.5%', isPositive: true, subtext: 'Sustained quarter-on-quarter expansion', iconType: 'growth', accentColor: 'amber', sparkline: [20, 22, 23, 24, 25, 26, 26.8] }
+      ],
+      '1Y': [
+        { id: 'users', title: 'Total Users', value: '384,100', change: '+48.2%', isPositive: true, subtext: 'Crossed 350k milestone in Q3', iconType: 'users', accentColor: 'blue', sparkline: [180, 210, 240, 280, 310, 345, 384] },
+        { id: 'revenue', title: 'Total Revenue', value: '$1,842,500.00', change: '+32.4%', isPositive: true, subtext: 'ARR Run-rate: $2.2M', iconType: 'dollar', accentColor: 'emerald', sparkline: [950, 1100, 1250, 1420, 1600, 1750, 1842] },
+        { id: 'orders', title: 'Total Orders', value: '142,800', change: '+38.6%', isPositive: true, subtext: 'Zero unresolved fulfillment dispute', iconType: 'orders', accentColor: 'purple', sparkline: [80, 92, 105, 118, 128, 138, 142] },
+        { id: 'growth', title: 'Growth Rate', value: '34.8%', change: '+9.2%', isPositive: true, subtext: 'Ranked in SaaS Top 100 Leaderboard', iconType: 'growth', accentColor: 'amber', sparkline: [22, 25, 27, 29, 31, 33, 34.8] }
+      ]
+    };
+
+    const monthlyChartData = [
+      { month: 'Jan', revenue: 95000, orders: 7400 },
+      { month: 'Feb', revenue: 108000, orders: 8100 },
+      { month: 'Mar', revenue: 115000, orders: 8600 },
+      { month: 'Apr', revenue: 130000, orders: 9400 },
+      { month: 'May', revenue: 124000, orders: 9100 },
+      { month: 'Jun', revenue: 142000, orders: 10200 },
+      { month: 'Jul', revenue: 156000, orders: 10800 },
+      { month: 'Aug', revenue: 150000, orders: 10500 },
+      { month: 'Sep', revenue: 168000, orders: 11400 },
+      { month: 'Oct', revenue: 172000, orders: 11900 },
+      { month: 'Nov', revenue: 184320, orders: 12845 },
+      { month: 'Dec', revenue: 198000, orders: 13900 }
+    ];
+
+    const initialOrders = [
+      { id: 'ORD-7291', customer: { name: 'Sophia Montgomery', email: 'sophia.m@veritas.io' }, plan: 'Enterprise Cloud', amount: 2450.00, date: '2026-11-12', status: 'Completed', paymentMethod: 'Credit Card (•••• 4921)', country: 'United States' },
+      { id: 'ORD-7290', customer: { name: 'Lucas Van Der Bilt', email: 'lucas@nordicflow.tech' }, plan: 'Pro Team Monthly', amount: 480.00, date: '2026-11-12', status: 'Processing', paymentMethod: 'PayPal', country: 'Netherlands' },
+      { id: 'ORD-7289', customer: { name: 'Elena Rostova', email: 'e.rostova@synapse.ai' }, plan: 'Enterprise Scale', amount: 4900.00, date: '2026-11-11', status: 'Completed', paymentMethod: 'Wire Transfer', country: 'Germany' },
+      { id: 'ORD-7288', customer: { name: 'Daisuke Tanaka', email: 'tanaka@zenithcorp.jp' }, plan: 'Developer Pro', amount: 199.00, date: '2026-11-11', status: 'Pending', paymentMethod: 'Apple Pay', country: 'Japan' },
+      { id: 'ORD-7287', customer: { name: 'Amara Okafor', email: 'amara.o@kigali-fin.org' }, plan: 'Custom Infrastructure', amount: 3200.00, date: '2026-11-10', status: 'Completed', paymentMethod: 'Credit Card (•••• 8130)', country: 'Rwanda' },
+      { id: 'ORD-7286', customer: { name: 'Mateo Morales', email: 'mateo@solarisdynamics.es' }, plan: 'Business Core', amount: 850.00, date: '2026-11-10', status: 'Cancelled', paymentMethod: 'Credit Card (•••• 1039)', country: 'Spain' },
+      { id: 'ORD-7285', customer: { name: 'Chloe Tremblay', email: 'chloe.t@apexquantum.ca' }, plan: 'Enterprise Cloud', amount: 2450.00, date: '2026-11-09', status: 'Completed', paymentMethod: 'Credit Card (•••• 7283)', country: 'Canada' },
+      { id: 'ORD-7284', customer: { name: 'Aarav Patel', email: 'aarav@indictechnologies.in' }, plan: 'Pro Team Annual', amount: 1450.00, date: '2026-11-08', status: 'Completed', paymentMethod: 'UPI / NetBanking', country: 'India' },
+      { id: 'ORD-7283', customer: { name: 'Freja Lindqvist', email: 'freja@nordicbio.se' }, plan: 'Developer Pro', amount: 199.00, date: '2026-11-08', status: 'Pending', paymentMethod: 'PayPal', country: 'Sweden' },
+      { id: 'ORD-7282', customer: { name: 'Gabriel Silva', email: 'gabriel.silva@rio-ventures.br' }, plan: 'Business Core', amount: 850.00, date: '2026-11-07', status: 'Completed', paymentMethod: 'Credit Card (•••• 3391)', country: 'Brazil' },
+      { id: 'ORD-7281', customer: { name: 'Hana Kim', email: 'hana.kim@seoul-ai.kr' }, plan: 'Enterprise Cloud', amount: 2450.00, date: '2026-11-06', status: 'Completed', paymentMethod: 'Wire Transfer', country: 'South Korea' },
+      { id: 'ORD-7280', customer: { name: 'Liam O\'Connor', email: 'liam@dublindata.ie' }, plan: 'Pro Team Monthly', amount: 480.00, date: '2026-11-05', status: 'Refunded', paymentMethod: 'Credit Card (•••• 9942)', country: 'Ireland' }
+    ];
+
+    const teamMembers = [
+      { id: '1', name: 'Dr. Evelyn Carter', role: 'Security Admin', dept: 'Cybersecurity', loc: 'San Francisco, US', status: 'Active', activeTime: '5 mins ago' },
+      { id: '2', name: 'Marcus Vance', role: 'Lead Architect', dept: 'Engineering', loc: 'London, UK', status: 'Active', activeTime: '12 mins ago' },
+      { id: '3', name: 'Seraphina Lin', role: 'Product Lead', dept: 'Product', loc: 'Singapore', status: 'Active', activeTime: '1 hour ago' },
+      { id: '4', name: 'Julian Kowalski', role: 'Data Scientist', dept: 'AI & Research', loc: 'Warsaw, Poland', status: 'Pending', activeTime: 'Yesterday' },
+      { id: '5', name: 'Zainab Al-Mansoor', role: 'Financial Analyst', dept: 'Finance', loc: 'Dubai, UAE', status: 'Active', activeTime: '3 hours ago' },
+      { id: '6', name: 'Carlos Mendez', role: 'DevOps Engineer', dept: 'Infrastructure', loc: 'Austin, US', status: 'Inactive', activeTime: '3 days ago' }
+    ];
+
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [isCollapsed, setIsCollapsed] = useState(false);
+      const [mobileOpen, setMobileOpen] = useState(false);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [selectedRow, setSelectedRow] = useState(null);
+      const [timeframe, setTimeframe] = useState('30D');
+
+      // Orders Table State
+      const [orders, setOrders] = useState(initialOrders);
+      const [tableSearch, setTableSearch] = useState('');
+      const [statusFilter, setStatusFilter] = useState('All');
+      const [sortField, setSortField] = useState('date');
+      const [sortDirection, setSortDirection] = useState('desc');
+      const [selectedIds, setSelectedIds] = useState([]);
+      const [currentPage, setCurrentPage] = useState(1);
+      const [itemsPerPage, setItemsPerPage] = useState(10);
+
+      // Performance Chart Metric
+      const [chartMetric, setChartMetric] = useState('revenue');
+      const [hoveredChartPoint, setHoveredChartPoint] = useState(null);
+
+      // Settings sub-tab state
+      const [settingsSubTab, setSettingsSubTab] = useState('profile');
+      const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+      const [toastMsg, setToastMsg] = useState(null);
+      const [downloadingId, setDownloadingId] = useState(null);
+      const [downloadingInvId, setDownloadingInvId] = useState(null);
+
+      // Billing & Subscription state
+      const [currentPlan, setCurrentPlan] = useState('Enterprise Cloud Suite');
+      const [planPrice, setPlanPrice] = useState('$4,900.00');
+      const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+      const [showPaymentModal, setShowPaymentModal] = useState(false);
+      const [selectedTier, setSelectedTier] = useState('enterprise');
+      const [paymentCard, setPaymentCard] = useState({ brand: 'Mastercard Corporate Black', last4: '4921', holder: 'Alex Morgan', expiry: '08/29' });
+
+      const [invoices, setInvoices] = useState([
+        { id: 'INV-2026-1102', date: 'Nov 01, 2026', period: 'Nov 01, 2026 - Dec 01, 2026', amount: '$4,900.00', status: 'Paid', method: 'Mastercard •••• 4921' },
+        { id: 'INV-2026-1002', date: 'Oct 01, 2026', period: 'Oct 01, 2026 - Nov 01, 2026', amount: '$4,900.00', status: 'Paid', method: 'Mastercard •••• 4921' },
+        { id: 'INV-2026-0902', date: 'Sep 01, 2026', period: 'Sep 01, 2026 - Oct 01, 2026', amount: '$4,900.00', status: 'Paid', method: 'Mastercard •••• 4921' },
+        { id: 'INV-2026-0802', date: 'Aug 01, 2026', period: 'Aug 01, 2026 - Sep 01, 2026', amount: '$4,900.00', status: 'Paid', method: 'Mastercard •••• 4921' },
+        { id: 'INV-2026-0702', date: 'Jul 01, 2026', period: 'Jul 01, 2026 - Aug 01, 2026', amount: '$4,900.00', status: 'Paid', method: 'Mastercard •••• 4921' }
+      ]);
+
+      const triggerDownload = (content, filename, mimeType) => {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 150);
+      };
+
+      const makePDF = (title, subtitle, sections) => {
+        const lines = [];
+        lines.push({ text: title.toUpperCase(), size: 14, dy: 24, font: '/F2' });
+        if (subtitle) lines.push({ text: subtitle, size: 9, dy: 16, font: '/F1' });
+        lines.push({ text: '----------------------------------------------------------------------------------------------------', size: 8, dy: 16, font: '/F1' });
+        sections.forEach(s => {
+          if (s.heading) {
+            lines.push({ text: '', size: 8, dy: 12, font: '/F1' });
+            lines.push({ text: s.heading.toUpperCase(), size: 10, dy: 18, font: '/F2' });
+          }
+          if (s.items) s.items.forEach(it => lines.push({ text: it, size: 9, dy: 14, font: '/F1' }));
+        });
+        lines.push({ text: '----------------------------------------------------------------------------------------------------', size: 8, dy: 18, font: '/F1' });
+        lines.push({ text: `CERTIFIED EXPORT - GENERATED: ${new Date().toUTCString()} - NEXUSPULSE ENGINE`, size: 8, dy: 12, font: '/F1' });
+        lines.push({ text: 'DIGITAL HASH: SHA256:' + Math.random().toString(36).substring(2) + ' - VERIFIED AUDIT', size: 7, dy: 12, font: '/F1' });
+
+        let streamBody = '';
+        let currentY = 740;
+        for (const line of lines) {
+          if (currentY < 60) break;
+          const cleanText = (line.text || '').replace(/[()\\]/g, '');
+          streamBody += `BT ${line.font || '/F1'} ${line.size || 9} Tf 45 ${currentY} Td (${cleanText}) Tj ET\n`;
+          currentY -= (line.dy || 14);
+        }
+        const o1 = '1 0 obj\n<< /Type /Catalog /Pages 2 0 R >>\nendobj\n';
+        const o2 = '2 0 obj\n<< /Type /Pages /Kids [3 0 R] /Count 1 >>\nendobj\n';
+        const o3 = '3 0 obj\n<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Contents 4 0 R /Resources << /Font << /F1 5 0 R /F2 6 0 R >> >> >>\nendobj\n';
+        const o4 = `4 0 obj\n<< /Length ${streamBody.length} >>\nstream\n${streamBody}endstream\nendobj\n`;
+        const o5 = '5 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>\nendobj\n';
+        const o6 = '6 0 obj\n<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>\nendobj\n';
+        const header = '%PDF-1.4\n';
+        const p1 = header.length; const p2 = p1 + o1.length; const p3 = p2 + o2.length;
+        const p4 = p3 + o3.length; const p5 = p4 + o4.length; const p6 = p5 + o5.length;
+        const xrefStart = p6 + o6.length;
+        const pad = n => ('0000000000' + n).slice(-10);
+        const xref = 'xref\n0 7\n0000000000 65535 f \n' + pad(p1) + ' 00000 n \n' + pad(p2) + ' 00000 n \n' + pad(p3) + ' 00000 n \n' + pad(p4) + ' 00000 n \n' + pad(p5) + ' 00000 n \n' + pad(p6) + ' 00000 n \n';
+        const trailer = `trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xrefStart}\n%%EOF\n`;
+        return header + o1 + o2 + o3 + o4 + o5 + o6 + xref + trailer;
+      };
+
+      const handleDownloadReport = (rep) => {
+        setDownloadingId(rep.id);
+        const ts = new Date().toISOString().slice(0, 10);
+        if (rep.type === 'PDF' && rep.id === 'fin') {
+          const pdf = makePDF('NexusPulse Enterprise - Q4 2026 Executive Financial Report', 'Audited Statements & Board Memorandum', [
+            { heading: '1. Financial Highlights', items: ['Gross Revenue: $4,924,500.00 (+24.8% YoY)', 'Contracted Net ARR: $18,420,000.00', 'Gross Profit Margin: 82.4%', 'Adjusted EBITDA: $1,405,200.00 (28.5%)'] },
+            { heading: '2. Regional Performance', items: ['North America: $2,856,210.00 (58%)', 'EMEA: $1,181,880.00 (24%)', 'APAC & Emerging: $886,410.00 (18%)'] },
+            { heading: '3. Compliance Attestation', items: ['Auditing Partner: Morgan & Vance Advisory LLP', 'Status: Certified Unqualified Clean Opinion'] }
+          ]);
+          triggerDownload(pdf, `NexusPulse_Q4_2026_Financial_Report_${ts}.pdf`, 'application/pdf');
+        } else if (rep.type === 'CSV' && rep.id === 'sla') {
+          const csv = 'Region_ID,Location,P50_ms,P95_ms,P99_ms,SLA_Uptime,Active_Nodes\nus-east-1,N. Virginia US,8.4,14.2,21.0,99.998%,64\nus-west-2,Oregon US,11.2,18.5,24.8,99.995%,48\neu-west-1,Dublin Ireland,14.8,22.1,29.4,99.999%,56\nap-south-1,Mumbai India,28.4,38.2,46.5,99.991%,32\nap-southeast-1,Singapore,22.3,31.0,41.8,99.997%,36';
+          triggerDownload(csv, `NexusPulse_Global_Edge_Network_SLA_${ts}.csv`, 'text/csv;charset=utf-8;');
+        } else if (rep.type === 'PDF' && rep.id === 'soc2') {
+          const pdf = makePDF('NexusPulse Cloud - SOC2 Type-II Continuous Compliance Audit', 'AICPA Trust Services Criteria Evaluation', [
+            { heading: '1. Trust Criteria Evaluation', items: ['Security (CC6.1-CC6.8): 100% Passed. Enforced mTLS & AES-256.', 'Availability (A1.1-A1.3): 99.99% multi-region verified.', 'Confidentiality (C1.1): Hardware HSM key storage.'] },
+            { heading: '2. Continuous Monitoring', items: ['Automated IAM Role Audits: 0 over-privileged policies', 'Vulnerability Scans: 0 Critical / 0 High CVEs', 'Auditor: Schellman & Company LLC - Clean Opinion'] }
+          ]);
+          triggerDownload(pdf, `NexusPulse_SOC2_Type_II_Audit_${ts}.pdf`, 'application/pdf');
+        } else {
+          const csv = 'Cohort_Month,New_Subscribers,Month_1_Ret,Month_3_Ret,Month_6_Ret,Net_Expansion,Churn_Velocity\n2026-01,124,98.4%,96.2%,94.8%,134.2%,0.62%\n2026-02,142,98.8%,96.9%,95.1%,131.8%,0.58%\n2026-03,158,99.1%,97.4%,95.8%,136.5%,0.51%\n2026-04,169,98.6%,96.8%,95.2%,129.4%,0.64%';
+          triggerDownload(csv, `NexusPulse_Cohort_Retention_and_Churn_${ts}.csv`, 'text/csv;charset=utf-8;');
+        }
+        setToastMsg(`Successfully downloaded ${rep.title}!`);
+        setTimeout(() => setDownloadingId(null), 1800);
+        setTimeout(() => setToastMsg(null), 4000);
+      };
+
+      const handleRunCustomAudit = () => {
+        setDownloadingId('custom-audit');
+        const ts = new Date().toISOString().replace(/[:.]/g, '-');
+        const data = JSON.stringify({
+          platform: 'NexusPulse Enterprise Suite',
+          timestamp: new Date().toISOString(),
+          uptime: '99.998%',
+          edgeNodes: 48,
+          quotaUsage: '78.4%',
+          security: 'HARDENED_SOC2_TIER1'
+        }, null, 2);
+        triggerDownload(data, `NexusPulse_System_Audit_Snapshot_${ts}.json`, 'application/json');
+        setToastMsg('Custom live audit snapshot generated and downloaded!');
+        setTimeout(() => setDownloadingId(null), 1800);
+        setTimeout(() => setToastMsg(null), 4000);
+      };
+
+      const handleDownloadInvoice = (inv) => {
+        setDownloadingInvId(inv.id);
+        const pdf = makePDF(`NexusPulse Enterprise - Tax Invoice #${inv.id}`, `Billed to Nexus Technologies Inc - Issued: ${inv.date}`, [
+          { heading: '1. Billing Particulars', items: [`Invoice ID: ${inv.id}`, `Billing Period: ${inv.period}`, `Payment Method: ${inv.method}`, `Status: ${inv.status.toUpperCase()}`] },
+          { heading: '2. Charges Breakdown', items: ['Description: NexusPulse Enterprise Cloud Suite (Annual Commitment)', 'Seats: 25 Admin & Operator Licenses', `Total Amount Charged: ${inv.amount}`, 'Taxes: $0.00 (Exempt Corporate Tier)'] }
+        ]);
+        triggerDownload(pdf, `NexusPulse_Invoice_${inv.id}.pdf`, 'application/pdf');
+        setToastMsg(`Invoice #${inv.id} successfully downloaded!`);
+        setTimeout(() => setDownloadingInvId(null), 1800);
+        setTimeout(() => setToastMsg(null), 4000);
+      };
+
+      // Notification state
+      const [showNotifs, setShowNotifs] = useState(false);
+      const [showProfile, setShowProfile] = useState(false);
+
+      // Sorting & Filtering
+      const effectiveSearch = searchQuery || tableSearch;
+      const filteredOrders = useMemo(() => {
+        return orders.filter(row => {
+          const matches = row.id.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            row.customer.name.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            row.customer.email.toLowerCase().includes(effectiveSearch.toLowerCase()) ||
+            row.plan.toLowerCase().includes(effectiveSearch.toLowerCase());
+          const statusMatch = statusFilter === 'All' || row.status === statusFilter;
+          return matches && statusMatch;
+        });
+      }, [orders, effectiveSearch, statusFilter]);
+
+      const sortedOrders = useMemo(() => {
+        return [...filteredOrders].sort((a, b) => {
+          let valA = a[sortField];
+          let valB = b[sortField];
+          if (sortField === 'customer') { valA = a.customer.name; valB = b.customer.name; }
+          if (typeof valA === 'string') {
+            return sortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+          }
+          return sortDirection === 'asc' ? valA - valB : valB - valA;
+        });
+      }, [filteredOrders, sortField, sortDirection]);
+
+      const totalItems = sortedOrders.length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+      const startIndex = (currentPage - 1) * itemsPerPage;
+      const paginatedOrders = sortedOrders.slice(startIndex, startIndex + itemsPerPage);
+
+      const handleSort = (field) => {
+        if (sortField === field) {
+          setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+        } else {
+          setSortField(field);
+          setSortDirection('asc');
+        }
+      };
+
+      const handleSelectAll = (e) => {
+        if (e.target.checked) setSelectedIds(paginatedOrders.map(d => d.id));
+        else setSelectedIds([]);
+      };
+
+      const handleExportCSV = () => {
+        const headers = ['Order ID', 'Customer Name', 'Email', 'Plan', 'Amount', 'Date', 'Status', 'Payment Method'];
+        const rows = filteredOrders.map(item => [
+          item.id, `"${item.customer.name}"`, item.customer.email, `"${item.plan}"`, item.amount, item.date, item.status, `"${item.paymentMethod}"`
+        ]);
+        const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+        const link = document.createElement('a');
+        link.setAttribute('href', encodeURI(csvContent));
+        link.setAttribute('download', `NexusPulse_Orders_${new Date().toISOString().slice(0, 10)}.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      // Chart SVG Path Construction
+      const svgW = 720; const svgH = 220; const px = 40; const py = 25;
+      const cW = svgW - px * 2; const cH = svgH - py * 2;
+      const maxVal = Math.max(...monthlyChartData.map(d => chartMetric === 'revenue' ? d.revenue : d.orders)) * 1.1;
+      const points = monthlyChartData.map((d, i) => ({
+        x: px + (i / (monthlyChartData.length - 1)) * cW,
+        y: svgH - py - ((chartMetric === 'revenue' ? d.revenue : d.orders) / maxVal) * cH,
+        data: d,
+        val: chartMetric === 'revenue' ? d.revenue : d.orders
+      }));
+      const pathD = points.reduce((acc, pt, i) => {
+        if (i === 0) return `M ${pt.x} ${pt.y}`;
+        const prev = points[i - 1]; const cpX = (prev.x + pt.x) / 2;
+        return `${acc} C ${cpX} ${prev.y}, ${cpX} ${pt.y}, ${pt.x} ${pt.y}`;
+      }, '');
+      const areaD = `${pathD} L ${points[points.length - 1].x} ${svgH - py} L ${points[0].x} ${svgH - py} Z`;
+
+      const currentMetrics = timeframeData[timeframe] || timeframeData['30D'];
+
+      return (
+        <div className="app-container">
+          {/* Mobile Overlay */}
+          <div className={`sidebar-overlay ${mobileOpen ? 'active' : ''}`} onClick={() => setMobileOpen(false)}></div>
+
+          {/* Sidebar */}
+          <aside className={`sidebar ${isCollapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+            <div className="sidebar-header">
+              <div className="sidebar-logo" onClick={() => setActiveTab('dashboard')}>
+                <div className="logo-badge"><Zap size={18} /></div>
+                {!isCollapsed && (
+                  <div className="logo-text">
+                    <span className="logo-title">NexusPulse</span>
+                    <span className="logo-subtitle">Enterprise Suite</span>
+                  </div>
+                )}
+              </div>
+              {mobileOpen && (
+                <button className="icon-action-btn" onClick={() => setMobileOpen(false)} style={{ border: 'none', background: 'transparent' }}>
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+
+            <div className="sidebar-nav-container">
+              <div>
+                {!isCollapsed && <div className="nav-group-label">Platform Core</div>}
+                <ul className="sidebar-nav">
+                  {[
+                    { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+                    { id: 'users', label: 'Users', icon: UsersIcon, badge: '6' },
+                    { id: 'reports', label: 'Reports', icon: FileBarChart, badge: 'New' },
+                    { id: 'settings', label: 'Settings', icon: SettingsIcon }
+                  ].map(item => {
+                    const Icon = item.icon;
+                    const active = activeTab === item.id;
+                    return (
+                      <li key={item.id}>
+                        <button
+                          className={`nav-link ${active ? 'active' : ''}`}
+                          onClick={() => { setActiveTab(item.id); setMobileOpen(false); }}
+                          style={{
+                            width: '100%',
+                            textAlign: isCollapsed ? 'center' : 'left',
+                            background: active ? undefined : 'transparent'
+                          }}
+                        >
+                          <span className="nav-icon"><Icon size={18} /></span>
+                          {!isCollapsed && (
+                            <>
+                              <span className="nav-label">{item.label}</span>
+                              {item.badge && <span className="nav-badge">{item.badge}</span>}
+                            </>
+                          )}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+
+              {!isCollapsed && (
+                <div className="sidebar-quota-card">
+                  <div className="quota-header">
+                    <span className="quota-title">API Quota Usage</span>
+                    <span className="quota-value">78%</span>
+                  </div>
+                  <div className="quota-bar-bg"><div className="quota-bar-fill"></div></div>
+                  <button
+                    className="quota-btn"
+                    onClick={() => {
+                      setActiveTab('settings');
+                      setSettingsSubTab('billing');
+                      setMobileOpen(false);
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    title="Manage Subscription & Billing"
+                  >
+                    <Zap size={13} /> Manage Subscription
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Sidebar Footer - Clean Collapse Button Centered without Overflow */}
+            <div className="sidebar-footer">
+              {!isCollapsed && (
+                <div className="sidebar-user-pill">
+                  <div className="sidebar-user-icon">
+                    <User size={16} />
+                  </div>
+                  <div className="sidebar-user-info">
+                    <span className="sidebar-user-name">Alex Morgan</span>
+                    <span className="sidebar-user-role">Super Admin</span>
+                  </div>
+                </div>
+              )}
+              <button className="sidebar-collapse-btn" onClick={() => setIsCollapsed(!isCollapsed)} title={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}>
+                {isCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              </button>
+            </div>
+          </aside>
+
+          {/* Main Content Area */}
+          <div className={`main-wrapper ${isCollapsed ? 'sidebar-collapsed' : ''}`}>
+            {/* Header */}
+            <header className="header">
+              <div className="header-left">
+                <button className="mobile-menu-btn" onClick={() => setMobileOpen(true)}><Menu size={22} /></button>
+                <div className="header-titles">
+                  <div className="header-breadcrumbs"><span>NexusPulse</span><span>/</span><span style={{ textTransform: 'capitalize', color: 'var(--primary)', fontWeight: 600 }}>{activeTab}</span></div>
+                  <h1 className="header-page-title">{activeTab === 'users' ? 'Team Directory' : activeTab === 'reports' ? 'Analytics & Compliance Reports' : activeTab === 'settings' ? 'System & Account Settings' : 'Operational Dashboard'}</h1>
+                </div>
+              </div>
+
+              <div className="header-right">
+                <div className="search-bar-container">
+                  <div className="search-input-wrapper">
+                    <Search className="search-icon" size={16} />
+                    <input
+                      type="text"
+                      placeholder="Search metrics, orders, users..."
+                      className="header-search-input"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    <span className="search-shortcut-pill">⌘K</span>
+                  </div>
+                </div>
+
+                <div className="header-actions">
+                  <button className="icon-action-btn" onClick={() => setShowNotifs(!showNotifs)}>
+                    <Bell size={18} />
+                    <span className="notification-badge-dot"></span>
+                  </button>
+                </div>
+
+                <div style={{ position: 'relative' }}>
+                  <div className="profile-pill" onClick={() => setShowProfile(!showProfile)}>
+                    <div className="profile-avatar-wrap">
+                      <div className="profile-avatar-icon">
+                        <User size={16} />
+                      </div>
+                      <span className="status-dot-online"></span>
+                    </div>
+                    <div className="profile-info">
+                      <span className="profile-name">Alex Morgan</span>
+                      <span className="profile-role-badge">Super Admin</span>
+                    </div>
+                    <ChevronDown size={14} style={{ color: 'var(--text-light)', marginLeft: '0.15rem' }} />
+                  </div>
+
+                  {showProfile && (
+                    <div className="dropdown-popover" style={{ top: 'calc(100% + 8px)', right: 0 }}>
+                      <div className="dropdown-header">
+                        <div style={{ fontWeight: 700, fontSize: '0.875rem', color: 'var(--text-main)' }}>Alex Morgan</div>
+                        <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>alex.morgan@nexus.ai</div>
+                      </div>
+                      <ul style={{ listStyle: 'none', padding: '0.35rem 0' }}>
+                        <li className="dropdown-item" onClick={() => { setActiveTab('settings'); setSettingsSubTab('profile'); setShowProfile(false); }}>
+                          <User size={15} /> View Profile
+                        </li>
+                        <li className="dropdown-item" onClick={() => { setActiveTab('settings'); setSettingsSubTab('billing'); setShowProfile(false); }}>
+                          <CreditCard size={15} /> Billing & Quotas
+                        </li>
+                        <li className="dropdown-item" onClick={() => { setActiveTab('settings'); setSettingsSubTab('security'); setShowProfile(false); }}>
+                          <Shield size={15} /> Security & 2FA
+                        </li>
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </header>
+
+            {/* Content Body */}
+            <main className="content-body">
+              {activeTab === 'dashboard' && (
+                <>
+                  <div className="dashboard-welcome-banner">
+                    <div className="banner-text">
+                      <h2>Operational Dashboard</h2>
+                      <p>Consolidated global infrastructure telemetry, revenue pipeline, and order fulfillment</p>
+                    </div>
+                    <div className="banner-controls">
+                      <div className="timeframe-pill-selector">
+                        {['7D', '30D', '90D', '1Y'].map(tf => (
+                          <button key={tf} className={`timeframe-btn ${timeframe === tf ? 'active' : ''}`} onClick={() => setTimeframe(tf)}>{tf}</button>
+                        ))}
+                      </div>
+                      <button className="secondary-btn" onClick={() => setActiveTab('reports')}><Download size={15} /> Export Audit</button>
+                    </div>
+                  </div>
+
+                  {/* 4 Summary Cards */}
+                  <section className="summary-cards-grid">
+                    {currentMetrics.map(card => {
+                      const maxS = Math.max(...card.sparkline);
+                      return (
+                        <div key={card.id} className="summary-card">
+                          <div className="card-top">
+                            <div className={`card-icon-box ${card.accentColor}`}>
+                              {card.iconType === 'users' && <UsersIcon size={20} />}
+                              {card.iconType === 'dollar' && <DollarSign size={20} />}
+                              {card.iconType === 'orders' && <ShoppingBag size={20} />}
+                              {card.iconType === 'growth' && <Activity size={20} />}
+                            </div>
+                            <div className={`trend-badge ${card.isPositive ? 'positive' : 'negative'}`}>
+                              {card.isPositive ? <TrendingUp size={13} /> : <TrendingDown size={13} />}
+                              <span>{card.change}</span>
+                            </div>
+                          </div>
+                          <div className="card-middle">
+                            <div className="card-title">{card.title}</div>
+                            <div className="card-value">{card.value}</div>
+                          </div>
+                          <div className="card-bottom">
+                            <span className="card-subtext">{card.subtext}</span>
+                            <div className="mini-sparkline">
+                              {card.sparkline.map((v, idx) => (
+                                <div key={idx} className="spark-bar" style={{
+                                  height: `${Math.max((v / maxS) * 100, 18)}%`,
+                                  backgroundColor: card.accentColor === 'emerald' ? '#16a34a' : card.accentColor === 'blue' ? '#2563eb' : card.accentColor === 'purple' ? '#7c3aed' : '#d97706'
+                                }}></div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </section>
+
+                  {/* Analytics Section */}
+                  <section className="analytics-section-grid">
+                    <div className="dashboard-panel">
+                      <div className="panel-header">
+                        <div className="panel-title-area">
+                          <h3 className="panel-title">Performance Analytics</h3>
+                          <span className="panel-subtitle">Audited monthly financial & fulfillment trajectory</span>
+                        </div>
+                        <div className="timeframe-pill-selector">
+                          <button className={`timeframe-btn ${chartMetric === 'revenue' ? 'active' : ''}`} onClick={() => setChartMetric('revenue')}>Revenue ($)</button>
+                          <button className={`timeframe-btn ${chartMetric === 'orders' ? 'active' : ''}`} onClick={() => setChartMetric('orders')}>Orders</button>
+                        </div>
+                      </div>
+
+                      <div className="chart-container">
+                        <svg viewBox={`0 0 ${svgW} ${svgH}`} className="svg-chart" preserveAspectRatio="none">
+                          {[0, 0.25, 0.5, 0.75, 1].map((r, i) => (
+                            <line key={i} x1={px} y1={py + r * cH} x2={svgW - px} y2={py + r * cH} stroke="#e2e8f0" strokeDasharray="3 3" strokeWidth="1" />
+                          ))}
+                          <path d={areaD} fill="#eff6ff" />
+                          <path d={pathD} fill="none" stroke="#2563eb" strokeWidth="2.5" strokeLinecap="round" />
+                          {points.map((pt, i) => (
+                            <g key={i}>
+                              <circle
+                                cx={pt.x} cy={pt.y}
+                                r={hoveredChartPoint === i ? 5 : 3.5}
+                                fill={hoveredChartPoint === i ? '#ffffff' : '#2563eb'}
+                                stroke="#2563eb" strokeWidth={hoveredChartPoint === i ? 2.5 : 1.5}
+                                style={{ cursor: 'pointer' }}
+                                onMouseEnter={() => setHoveredChartPoint(i)}
+                                onMouseLeave={() => setHoveredChartPoint(null)}
+                              />
+                              <text x={pt.x} y={svgH - 6} textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="600">{pt.data.month}</text>
+                            </g>
+                          ))}
+                        </svg>
+
+                        {hoveredChartPoint !== null && (
+                          <div style={{
+                            position: 'absolute',
+                            left: `${(points[hoveredChartPoint].x / svgW) * 100}%`,
+                            top: `${(points[hoveredChartPoint].y / svgH) * 100}%`,
+                            transform: 'translate(-50%, -120%)',
+                            background: '#ffffff',
+                            border: '1px solid #cbd5e1',
+                            borderRadius: '6px',
+                            padding: '0.4rem 0.65rem',
+                            boxShadow: '0 4px 6px -1px rgba(15, 23, 42, 0.1)',
+                            pointerEvents: 'none',
+                            whiteSpace: 'nowrap',
+                            zIndex: 20
+                          }}>
+                            <div style={{ fontSize: '0.7rem', color: '#64748b' }}>{points[hoveredChartPoint].data.month} 2026</div>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                              {chartMetric === 'revenue' ? `$${points[hoveredChartPoint].val.toLocaleString()}` : `${points[hoveredChartPoint].val} orders`}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Donut Distribution */}
+                    <div className="dashboard-panel">
+                      <div className="panel-header">
+                        <div className="panel-title-area">
+                          <h3 className="panel-title">Revenue by Tier</h3>
+                          <span className="panel-subtitle">Contract distribution breakdown</span>
+                        </div>
+                      </div>
+                      <div className="distribution-container">
+                        <div className="donut-visual-wrapper">
+                          <svg width="140" height="140" viewBox="0 0 42 42">
+                            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#e2e8f0" strokeWidth="4.5" />
+                            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#2563eb" strokeWidth="4.5" strokeDasharray="46 54" strokeDashoffset="25" />
+                            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#0284c7" strokeWidth="4.5" strokeDasharray="28 72" strokeDashoffset="-21" />
+                            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#16a34a" strokeWidth="4.5" strokeDasharray="16 84" strokeDashoffset="-49" />
+                            <circle cx="21" cy="21" r="15.91549430918954" fill="transparent" stroke="#d97706" strokeWidth="4.5" strokeDasharray="10 90" strokeDashoffset="-65" />
+                          </svg>
+                          <div className="donut-center-info">
+                            <div className="donut-center-total">$184k</div>
+                            <div className="donut-center-label">Monthly</div>
+                          </div>
+                        </div>
+
+                        <div className="distribution-list">
+                          {[
+                            { label: 'Enterprise Subscriptions', percent: 46, color: '#2563eb', value: '$84,787' },
+                            { label: 'Pro Team Licenses', percent: 28, color: '#0284c7', value: '$51,609' },
+                            { label: 'API Add-on Usage', percent: 16, color: '#16a34a', value: '$29,491' },
+                            { label: 'Consulting & Setup', percent: 10, color: '#d97706', value: '$18,432' }
+                          ].map((item, idx) => (
+                            <div key={idx} className="dist-item">
+                              <div className="dist-info">
+                                <span className="dist-color-pill" style={{ backgroundColor: item.color }}></span>
+                                <span className="dist-name">{item.label}</span>
+                              </div>
+                              <div className="dist-numbers">
+                                <span className="dist-val">{item.value}</span>
+                                <span className="dist-pct" style={{ marginLeft: '6px' }}>({item.percent}%)</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+
+                  {/* 10+ Records Data Table */}
+                  <section className="table-panel">
+                    <div className="table-panel-header">
+                      <div className="table-title-area">
+                        <h3>Recent Orders & Enterprise Accounts</h3>
+                        <p>Displaying transaction audit log across all global payment gateways</p>
+                      </div>
+
+                      <div className="table-toolbar">
+                        <div className="table-search-box">
+                          <Search className="table-search-icon" size={16} />
+                          <input
+                            type="text"
+                            placeholder="Filter by customer, ID, plan..."
+                            value={tableSearch}
+                            onChange={(e) => { setTableSearch(e.target.value); setCurrentPage(1); }}
+                          />
+                        </div>
+
+                        <select className="filter-select" value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}>
+                          <option value="All">All Statuses</option>
+                          <option value="Completed">Completed</option>
+                          <option value="Processing">Processing</option>
+                          <option value="Pending">Pending</option>
+                          <option value="Cancelled">Cancelled</option>
+                          <option value="Refunded">Refunded</option>
+                        </select>
+
+                        <button className="secondary-btn" onClick={handleExportCSV}>
+                          <Download size={15} /> Export CSV
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="table-responsive-container">
+                      <table className="data-table">
+                        <thead>
+                          <tr>
+                            <th style={{ width: '48px', textAlign: 'center' }}>
+                              <input type="checkbox" className="custom-checkbox" onChange={handleSelectAll} checked={paginatedOrders.length > 0 && selectedIds.length === paginatedOrders.length} />
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('id')}>
+                              <div className="th-content">Order ID <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('customer')}>
+                              <div className="th-content">Customer <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('plan')}>
+                              <div className="th-content">Plan / Service <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('amount')}>
+                              <div className="th-content">Amount <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('date')}>
+                              <div className="th-content">Date <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th className="sortable" onClick={() => handleSort('status')}>
+                              <div className="th-content">Status <ArrowUpDown size={12} /></div>
+                            </th>
+                            <th>Payment Method</th>
+                            <th style={{ textAlign: 'center' }}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {paginatedOrders.map(row => (
+                            <tr key={row.id} onClick={() => setSelectedRow(row)} style={{ cursor: 'pointer' }}>
+                              <td style={{ textAlign: 'center' }} onClick={(e) => e.stopPropagation()}>
+                                <input
+                                  type="checkbox"
+                                  className="custom-checkbox"
+                                  checked={selectedIds.includes(row.id)}
+                                  onChange={() => setSelectedIds(prev => prev.includes(row.id) ? prev.filter(x => x !== row.id) : [...prev, row.id])}
+                                />
+                              </td>
+                              <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--primary)' }}>{row.id}</td>
+                              <td>
+                                <div className="customer-cell">
+                                  <div className="customer-avatar-box">
+                                    <User size={15} />
+                                  </div>
+                                  <div className="customer-meta">
+                                    <span className="customer-name">{row.customer.name}</span>
+                                    <span className="customer-email">{row.customer.email}</span>
+                                  </div>
+                                </div>
+                              </td>
+                              <td style={{ fontWeight: 500 }}>{row.plan}</td>
+                              <td style={{ fontWeight: 700 }}>${row.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                              <td style={{ color: 'var(--text-muted)' }}>{row.date}</td>
+                              <td>
+                                <span className={`status-badge ${row.status.toLowerCase()}`}>
+                                  <span className="dot"></span>{row.status}
+                                </span>
+                              </td>
+                              <td style={{ color: 'var(--text-muted)', fontSize: '0.8rem' }}>{row.paymentMethod}</td>
+                              <td onClick={(e) => e.stopPropagation()}>
+                                <div className="table-actions-cell" style={{ justifyContent: 'center' }}>
+                                  <button className="row-action-btn" onClick={() => setSelectedRow(row)}><Eye size={15} /></button>
+                                  <button className="row-action-btn delete" onClick={() => setOrders(prev => prev.filter(x => x.id !== row.id))}><Trash2 size={15} /></button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="table-pagination-footer">
+                      <div className="pagination-info">
+                        Showing <strong>{startIndex + 1}</strong> to <strong>{Math.min(startIndex + itemsPerPage, totalItems)}</strong> of <strong>{totalItems}</strong> entries
+                      </div>
+                      <div className="pagination-controls">
+                        <button className="page-btn" onClick={() => setCurrentPage(p => Math.max(p - 1, 1))} disabled={currentPage === 1}><ChevronLeft size={16} /></button>
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+                          <button key={p} className={`page-btn ${currentPage === p ? 'active' : ''}`} onClick={() => setCurrentPage(p)}>{p}</button>
+                        ))}
+                        <button className="page-btn" onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))} disabled={currentPage === totalPages}><ChevronRight size={16} /></button>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              )}
+
+              {/* Users Tab */}
+              {activeTab === 'users' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                  <div className="table-panel-header" style={{ borderRadius: '12px', background: '#ffffff', border: '1px solid var(--border)' }}>
+                    <div className="table-title-area">
+                      <h3>Team Directory & Access Governance</h3>
+                      <p>Administrative profiles, permission tiers, and 2FA authentication logs</p>
+                    </div>
+                  </div>
+                  <div className="view-card-grid">
+                    {teamMembers.map(u => (
+                      <div key={u.id} className="user-profile-card">
+                        <div className="user-avatar-icon-box">
+                          <User size={24} />
+                        </div>
+                        <h4 className="user-card-name">{u.name}</h4>
+                        <span className="user-card-role">{u.role}</span>
+                        <span className="user-card-dept">{u.dept} • {u.loc}</span>
+                        <div style={{ display: 'flex', gap: '0.45rem', marginBottom: '0.85rem' }}>
+                          <span className={`status-badge ${u.status.toLowerCase()}`}>
+                            <span className="dot"></span>{u.status}
+                          </span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '0.2rem 0.5rem', borderRadius: '6px', fontSize: '0.725rem', fontWeight: 600, backgroundColor: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }}>
+                            <Shield size={12} /> 2FA
+                          </span>
+                        </div>
+                        <div className="user-card-footer">
+                          <span>Active {u.activeTime}</span>
+                          <span style={{ color: 'var(--success)', fontWeight: 600 }}>Active</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Reports Tab */}
+              {activeTab === 'reports' && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                  {/* System Health Overview */}
+                  <div className="report-metrics-row">
+                    {[
+                      { label: 'API Gateway Uptime', value: '99.98%', sub: 'All 24 regions operational' },
+                      { label: 'Global Server Latency', value: '18.4ms', sub: 'P99 peak response' },
+                      { label: 'Active Edge Nodes', value: '48 / 48', sub: '100% capacity healthy' },
+                      { label: 'SOC2 Type-II Audit', value: 'Certified', sub: 'Continuous auto-monitoring' }
+                    ].map((s, i) => (
+                      <div key={i} className="dashboard-panel" style={{ padding: '1.25rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                          <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>{s.label}</span>
+                          <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 6px #10b981' }}></span>
+                        </div>
+                        <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>{s.value}</div>
+                        <div style={{ fontSize: '0.75rem', color: '#10b981', fontWeight: 600, marginTop: '0.25rem' }}>{s.sub}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Reports Center Panel */}
+                  <div className="table-panel">
+                    <div className="table-panel-header">
+                      <div className="table-title-area">
+                        <h3>Generated Compliance & Performance Reports</h3>
+                        <p>Download certified system exports, audit records, and financial statements</p>
+                      </div>
+                      <button className="primary-btn" onClick={handleRunCustomAudit} disabled={downloadingId === 'custom-audit'}>
+                        <Zap size={16} /> {downloadingId === 'custom-audit' ? 'Compiling Snapshot...' : 'Run Custom Audit'}
+                      </button>
+                    </div>
+
+                    <div style={{ padding: '1.25rem' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                        {[
+                          { id: 'fin', title: 'Q4 2026 Executive Financial Report', category: 'Finance', type: 'PDF', date: 'Generated Nov 10, 2026', size: '4.8 MB', desc: 'GAAP revenue, EBITDA margins, cash runway, and board attestation.' },
+                          { id: 'sla', title: 'Global Edge Network Latency & SLA Audit', category: 'Infrastructure', type: 'CSV', date: 'Generated Nov 08, 2026', size: '2.1 MB', desc: 'P50/P95/P99 latency across 24 edge points of presence with packet loss audits.' },
+                          { id: 'soc2', title: 'SOC2 Type-II Continuous Compliance Audit', category: 'Security', type: 'PDF', date: 'Generated Nov 05, 2026', size: '8.4 MB', desc: 'Independent AICPA trust criteria verification with zero critical findings.' },
+                          { id: 'cohort', title: 'Customer Cohort Retention & Churn Velocity', category: 'Growth', type: 'CSV', date: 'Generated Nov 01, 2026', size: '1.4 MB', desc: '12-month cohort renewal velocity and net expansion rate metrics.' }
+                        ].map((rep) => {
+                          const isDownloading = downloadingId === rep.id;
+                          return (
+                            <div key={rep.id} style={{ padding: '1.35rem', borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: '#ffffff', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                              <div style={{ marginBottom: '1.25rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.65rem' }}>
+                                  <span style={{ fontSize: '0.675rem', fontWeight: 700, textTransform: 'uppercase', padding: '0.2rem 0.55rem', borderRadius: '6px', background: 'var(--primary-light)', color: 'var(--primary)' }}>{rep.category}</span>
+                                  <span style={{ fontSize: '0.725rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', backgroundColor: rep.type === 'PDF' ? '#fee2e2' : '#dcfce7', color: rep.type === 'PDF' ? '#b91c1c' : '#15803d' }}>{rep.type}</span>
+                                </div>
+                                <h4 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.45rem', lineHeight: 1.35 }}>{rep.title}</h4>
+                                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '0.65rem', lineHeight: 1.4 }}>{rep.desc}</p>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{rep.date} • {rep.size}</div>
+                              </div>
+                              <button
+                                className={isDownloading ? 'primary-btn' : 'secondary-btn'}
+                                style={{ width: '100%', justifyContent: 'center', fontWeight: 600, gap: '0.5rem', backgroundColor: isDownloading ? 'var(--success)' : undefined, borderColor: isDownloading ? 'var(--success)' : undefined }}
+                                onClick={() => handleDownloadReport(rep)}
+                                disabled={isDownloading}
+                              >
+                                {isDownloading ? (<><Check size={15} /> Download Complete!</>) : (<><Download size={15} /> Download Document</>)}
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Settings Tab - Executive Responsive Layout */}
+              {activeTab === 'settings' && (
+                <div className="table-panel" style={{ padding: '2rem 1.75rem' }}>
+                  <div className="settings-container">
+                    <div className="settings-nav">
+                      <button className={`settings-tab-btn ${settingsSubTab === 'profile' ? 'active' : ''}`} onClick={() => setSettingsSubTab('profile')}>
+                        <User size={17} /> <span>Admin Profile</span>
+                      </button>
+                      <button className={`settings-tab-btn ${settingsSubTab === 'billing' ? 'active' : ''}`} onClick={() => setSettingsSubTab('billing')}>
+                        <CreditCard size={17} /> <span>Subscription & Billing</span>
+                        <span style={{ marginLeft: 'auto', fontSize: '0.65rem', fontWeight: 700, padding: '0.15rem 0.4rem', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>Enterprise</span>
+                      </button>
+                      <button className={`settings-tab-btn ${settingsSubTab === 'security' ? 'active' : ''}`} onClick={() => setSettingsSubTab('security')}>
+                        <Shield size={17} /> <span>Security & 2FA</span>
+                      </button>
+                    </div>
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* SUBTAB 1: ADMIN PROFILE */}
+                      {settingsSubTab === 'profile' && (
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                            <div>
+                              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>Profile Information</h3>
+                              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Manage your personal credentials, designation, and regional settings</p>
+                            </div>
+                            <span style={{ padding: '0.25rem 0.65rem', borderRadius: '6px', fontSize: '0.75rem', fontWeight: 700, backgroundColor: 'var(--primary-light)', color: 'var(--primary)', border: '1px solid var(--primary-border)' }}>
+                              Super Admin Account
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem', padding: '1.25rem', borderRadius: '10px', backgroundColor: '#f8fafc', border: '1px solid var(--border)', marginBottom: '1.5rem' }}>
+                            <div style={{ width: '54px', height: '54px', borderRadius: '10px', backgroundColor: 'var(--dark-navy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <User size={26} />
+                            </div>
+                            <div>
+                              <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Alex Morgan</div>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>alex.morgan@nexus.ai • Full Organization Access</div>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label">Full Name</label>
+                              <input type="text" className="form-input" defaultValue="Alex Morgan" />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label">Email Address</label>
+                              <input type="email" className="form-input" defaultValue="alex.morgan@nexus.ai" />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label">Designation</label>
+                              <input type="text" className="form-input" defaultValue="Chief Technology Officer & Lead Architect" />
+                            </div>
+                            <div className="form-group" style={{ marginBottom: 0 }}>
+                              <label className="form-label">Default Timezone</label>
+                              <select className="form-input" defaultValue="UTC-08:00 (Pacific Time)">
+                                <option>UTC-08:00 (Pacific Time)</option>
+                                <option>UTC-05:00 (Eastern Time)</option>
+                                <option>UTC+00:00 (London, GMT)</option>
+                                <option>UTC+05:30 (India Standard Time)</option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <button className="primary-btn" onClick={() => { setToastMsg('Profile settings updated successfully!'); setTimeout(() => setToastMsg(null), 3500); }}>Save Changes</button>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 2: SUBSCRIPTION & BILLING (ADVANCED ENTERPRISE SUITE) */}
+                      {settingsSubTab === 'billing' && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                            <div>
+                              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em' }}>Subscription & Corporate Billing</h3>
+                              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Manage enterprise commitment, live resource quotas, billing profiles, and certified invoices.</p>
+                            </div>
+                            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', padding: '0.35rem 0.75rem', borderRadius: '6px', fontSize: '0.775rem', fontWeight: 700, backgroundColor: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success-border)' }}>
+                              <span style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--success)' }}></span>
+                              Active Enterprise Tier
+                            </span>
+                          </div>
+
+                          {/* Plan Hero Card */}
+                          <div style={{ padding: '1.5rem', borderRadius: '12px', border: '1px solid var(--border)', backgroundColor: '#f8fafc', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', marginBottom: '0.35rem' }}>
+                                  <span style={{ fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', padding: '0.2rem 0.6rem', borderRadius: '4px', backgroundColor: 'var(--primary)', color: '#ffffff' }}>Active Commitment</span>
+                                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Contract #NX-SUB-2026-8842</span>
+                                </div>
+                                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', marginBottom: '0.25rem' }}>{currentPlan}</h2>
+                                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>High-concurrency infrastructure, dedicated edge routing, and round-the-clock priority SLA.</p>
+                              </div>
+                              <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)' }}>{planPrice}<span style={{ fontSize: '0.875rem', fontWeight: 500, color: 'var(--text-muted)' }}> / month</span></div>
+                                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Billed annually ($58,800.00/yr) • Next cycle: Dec 15, 2026</div>
+                              </div>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '0.75rem', padding: '1rem', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid var(--border)' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: 600 }}><Check size={16} style={{ color: 'var(--primary)' }} /> 25 Operator Seats with Okta SAML</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: 600 }}><Check size={16} style={{ color: 'var(--primary)' }} /> 10M API Calls / Month Included</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: 600 }}><Check size={16} style={{ color: 'var(--primary)' }} /> 2.0 TB Multi-Region Edge CDN</div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.825rem', color: 'var(--text-main)', fontWeight: 600 }}><Check size={16} style={{ color: 'var(--primary)' }} /> Dedicated TAM & 15-Min SLA</div>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+                              <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Auto-renew active via Corporate Mastercard ending in <strong>{paymentCard.last4}</strong></div>
+                              <div style={{ display: 'flex', gap: '0.65rem' }}>
+                                <button type="button" className="primary-btn" onClick={() => setShowUpgradeModal(true)}><Zap size={14} /> Upgrade / Change Tier</button>
+                                <button type="button" className="secondary-btn" onClick={() => setShowPaymentModal(true)}>Update Card</button>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Live Metered Quotas */}
+                          <div>
+                            <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.85rem' }}>Live Resource Quotas & Infrastructure Telemetry</h4>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1rem' }}>
+                              {[
+                                { title: 'API Request Volume', pct: '78.4%', used: '7,842,100 used', cap: '10,000,000 cap', color: 'var(--primary)' },
+                                { title: 'Global Edge CDN Bandwidth', pct: '71.0%', used: '1.42 TB routed', cap: '2.0 TB limit', color: 'var(--primary)' },
+                                { title: 'Admin & Operator Licenses', pct: '72.0%', used: '18 / 25 assigned', cap: '7 licenses open', color: 'var(--success)' },
+                                { title: 'Encrypted Storage & Backups', pct: '41.2%', used: '412 GB stored', cap: '1,000 GB cap', color: 'var(--dark-navy)' }
+                              ].map((q, idx) => (
+                                <div key={idx} style={{ padding: '1.15rem', borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                                    <span style={{ fontSize: '0.825rem', fontWeight: 700, color: 'var(--text-main)' }}>{q.title}</span>
+                                    <span style={{ fontSize: '0.825rem', fontWeight: 800, color: q.color }}>{q.pct}</span>
+                                  </div>
+                                  <div style={{ height: '7px', backgroundColor: '#e2e8f0', borderRadius: '4px', overflow: 'hidden', marginBottom: '0.65rem' }}>
+                                    <div style={{ width: q.pct, height: '100%', backgroundColor: q.color, borderRadius: '4px' }}></div>
+                                  </div>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                                    <span>{q.used}</span>
+                                    <span>{q.cap}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Payment Methods & Profile */}
+                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem' }}>
+                            <div style={{ padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>Payment Methods</h4>
+                                <button type="button" className="secondary-btn" style={{ fontSize: '0.75rem', padding: '0.35rem 0.65rem' }} onClick={() => setShowPaymentModal(true)}>+ Add Method</button>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid var(--border)', marginBottom: '0.65rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  <div style={{ width: '40px', height: '28px', borderRadius: '4px', backgroundColor: 'var(--dark-navy)', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <CreditCard size={18} />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>{paymentCard.brand} •••• {paymentCard.last4}</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Expires {paymentCard.expiry} • {paymentCard.holder}</div>
+                                  </div>
+                                </div>
+                                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', backgroundColor: 'var(--primary-light)', color: 'var(--primary)' }}>Default</span>
+                              </div>
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid var(--border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                  <div style={{ width: '40px', height: '28px', borderRadius: '4px', backgroundColor: '#f1f5f9', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Zap size={18} />
+                                  </div>
+                                  <div>
+                                    <div style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-main)' }}>Corporate ACH Direct Debit</div>
+                                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>JPMorgan Chase •••• 8812 • Verified</div>
+                                  </div>
+                                </div>
+                                <span style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>Backup</span>
+                              </div>
+                            </div>
+
+                            <div style={{ padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: '#ffffff' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.85rem' }}>
+                                <h4 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-main)' }}>Billing Profile & Tax Info</h4>
+                                <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '4px', backgroundColor: 'var(--success-bg)', color: 'var(--success)' }}>Verified Tax Exempt</span>
+                              </div>
+                              <div style={{ fontSize: '0.825rem', color: 'var(--text-main)', lineHeight: 1.6 }}>
+                                <div style={{ fontWeight: 700 }}>Nexus Technologies Global, Inc.</div>
+                                <div>100 Montgomery St, Suite 1400</div>
+                                <div>San Francisco, CA 94104, United States</div>
+                                <div style={{ marginTop: '0.45rem', fontSize: '0.775rem', color: 'var(--text-muted)' }}>Tax ID: <strong>US-94-3829104</strong> • PO: <strong>PO-2026-ENG-8492</strong></div>
+                                <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Billing Inquiries: <strong>billing@nexus.ai</strong></div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Invoices Table */}
+                          <div style={{ borderRadius: '10px', border: '1px solid var(--border)', backgroundColor: '#ffffff', overflow: 'hidden' }}>
+                            <div style={{ padding: '1.15rem 1.25rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div>
+                                <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>Official Invoices & Tax Receipts</h4>
+                                <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>Download certified PDF audit invoices with cryptographic signatures</p>
+                              </div>
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: 600 }}>5 invoices available</span>
+                            </div>
+                            <div style={{ overflowX: 'auto' }}>
+                              <table className="nexus-table" style={{ width: '100%' }}>
+                                <thead>
+                                  <tr>
+                                    <th>Invoice ID</th>
+                                    <th>Billing Cycle</th>
+                                    <th>Issued Date</th>
+                                    <th>Total Amount</th>
+                                    <th>Status</th>
+                                    <th style={{ textAlign: 'right' }}>Document</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {invoices.map((inv) => (
+                                    <tr key={inv.id}>
+                                      <td style={{ fontWeight: 700, fontFamily: 'monospace', color: 'var(--primary)' }}>{inv.id}</td>
+                                      <td style={{ fontSize: '0.825rem' }}>{inv.period}</td>
+                                      <td style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>{inv.date}</td>
+                                      <td style={{ fontWeight: 700, fontSize: '0.875rem' }}>{inv.amount}</td>
+                                      <td>
+                                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', padding: '0.2rem 0.55rem', borderRadius: '4px', fontSize: '0.725rem', fontWeight: 700, backgroundColor: 'var(--success-bg)', color: 'var(--success)' }}>
+                                          <Check size={12} /> {inv.status}
+                                        </span>
+                                      </td>
+                                      <td style={{ textAlign: 'right' }}>
+                                        <button
+                                          type="button"
+                                          className="secondary-btn"
+                                          style={{ fontSize: '0.75rem', padding: '0.35rem 0.75rem', display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
+                                          onClick={() => handleDownloadInvoice(inv)}
+                                          disabled={downloadingInvId === inv.id}
+                                        >
+                                          <Download size={13} /> {downloadingInvId === inv.id ? 'Downloading...' : 'Download PDF'}
+                                        </button>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* SUBTAB 3: SECURITY & 2FA */}
+                      {settingsSubTab === 'security' && (
+                        <div>
+                          <div style={{ marginBottom: '1.5rem' }}>
+                            <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)' }}>Security & Authentication</h3>
+                            <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Configure hardware keys, biometric 2FA, and monitor active sessions</p>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '1.25rem', borderRadius: '10px', border: '1px solid var(--border)', marginBottom: '1.25rem', backgroundColor: '#ffffff' }}>
+                            <div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.25rem' }}>
+                                <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Two-Factor Authentication (2FA)</span>
+                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, backgroundColor: twoFactorEnabled ? 'var(--success-bg)' : 'var(--danger-bg)', color: twoFactorEnabled ? 'var(--success)' : 'var(--danger)', border: `1px solid ${twoFactorEnabled ? 'var(--success-border)' : 'var(--danger-border)'}` }}>
+                                  {twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                                </span>
+                              </div>
+                              <div style={{ fontSize: '0.785rem', color: 'var(--text-muted)' }}>Require authenticator app token on login.</div>
+                            </div>
+                            <label className="switch-toggle">
+                              <input type="checkbox" checked={twoFactorEnabled} onChange={(e) => setTwoFactorEnabled(e.target.checked)} />
+                              <span className="slider-round"></span>
+                            </label>
+                          </div>
+
+                          <div style={{ border: '1px solid var(--border)', borderRadius: '10px', padding: '1.25rem', backgroundColor: '#ffffff' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                              <div>
+                                <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>Active Browser Sessions</div>
+                                <div style={{ fontSize: '0.785rem', color: 'var(--text-muted)' }}>Devices currently authenticated to your dashboard</div>
+                              </div>
+                              <button className="secondary-btn" style={{ fontSize: '0.785rem', padding: '0.4rem 0.85rem' }} onClick={() => { setToastMsg('Terminated all other active browser sessions.'); setTimeout(() => setToastMsg(null), 3500); }}>
+                                Revoke Other Sessions
+                              </button>
+                            </div>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.85rem 1rem', borderRadius: '8px', backgroundColor: '#f8fafc', border: '1px solid var(--border)' }}>
+                              <div>
+                                <div style={{ fontSize: '0.825rem', fontWeight: 700 }}>Chrome on Windows 11 (Current Session)</div>
+                                <div style={{ fontSize: '0.725rem', color: 'var(--text-muted)' }}>IP: 192.168.1.1 • San Francisco, US</div>
+                              </div>
+                              <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.7rem', fontWeight: 700, backgroundColor: 'var(--success-bg)', color: 'var(--success)', border: '1px solid var(--success-border)' }}>Active Now</span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </main>
+          </div>
+
+          {/* Details Modal */}
+          {selectedRow && (
+            <div className="modal-overlay" onClick={() => setSelectedRow(null)}>
+              <div className="modal-dialog" onClick={(e) => e.stopPropagation()}>
+                <div className="modal-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span className="modal-title">Transaction Details</span>
+                    <span style={{ fontFamily: 'monospace', fontSize: '0.8rem', padding: '0.2rem 0.5rem', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '4px', fontWeight: 700 }}>
+                      {selectedRow.id}
+                    </span>
+                  </div>
+                  <button className="modal-close-btn" onClick={() => setSelectedRow(null)}>&times;</button>
+                </div>
+                <div className="modal-body">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.85rem', borderRadius: '8px', backgroundColor: 'var(--bg-hover)', marginBottom: '1rem' }}>
+                    <div className="customer-avatar-box" style={{ width: '38px', height: '38px' }}>
+                      <User size={18} />
+                    </div>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{selectedRow.customer.name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{selectedRow.customer.email}</div>
+                    </div>
+                  </div>
+                  <div className="detail-row"><span className="detail-label">Plan Tier</span><span className="detail-value">{selectedRow.plan}</span></div>
+                  <div className="detail-row"><span className="detail-label">Total Amount</span><span className="detail-value" style={{ color: 'var(--primary)', fontSize: '1.05rem' }}>${selectedRow.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                  <div className="detail-row"><span className="detail-label">Status</span><span className="detail-value">{selectedRow.status}</span></div>
+                  <div className="detail-row"><span className="detail-label">Origin</span><span className="detail-value">{selectedRow.country}</span></div>
+                </div>
+                <div className="modal-footer">
+                  <button
+                    className="secondary-btn"
+                    onClick={() => handleDownloadInvoice({ id: selectedRow.id, date: selectedRow.date, period: 'Completed Order Transaction', amount: '$' + selectedRow.amount.toFixed(2), status: selectedRow.status, method: selectedRow.paymentMethod })}
+                  >
+                    <Download size={14} /> Download Invoice PDF
+                  </button>
+                  <button className="primary-btn" onClick={() => setSelectedRow(null)}>Close</button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Upgrade Plan Modal */}
+          {showUpgradeModal && (
+            <div className="modal-overlay" onClick={() => setShowUpgradeModal(false)}>
+              <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+                <div className="modal-header">
+                  <div>
+                    <h3 className="modal-title">Upgrade Enterprise Commitment Tier</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Scale quotas, edge bandwidth, and seats</p>
+                  </div>
+                  <button className="modal-close-btn" onClick={() => setShowUpgradeModal(false)}>&times;</button>
+                </div>
+                <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                  {[
+                    { id: 'professional', name: 'Professional Platform', price: '$1,850/mo', desc: '4M API requests, 12 seats, 800GB CDN' },
+                    { id: 'enterprise', name: 'Enterprise Cloud Suite (Current)', price: '$4,900/mo', desc: '10M API requests, 25 seats, 2TB CDN, Dedicated TAM' },
+                    { id: 'sovereign', name: 'Sovereign Dedicated Cloud', price: '$9,500/mo', desc: 'Unlimited API requests, 100 seats, dedicated isolated VPC' }
+                  ].map(t => (
+                    <div
+                      key={t.id}
+                      onClick={() => setSelectedTier(t.id)}
+                      style={{
+                        padding: '1rem',
+                        borderRadius: '8px',
+                        border: selectedTier === t.id ? '2px solid var(--primary)' : '1px solid var(--border)',
+                        backgroundColor: selectedTier === t.id ? 'var(--primary-light)' : '#ffffff',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t.name}</div>
+                        <div style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{t.desc}</div>
+                      </div>
+                      <div style={{ fontWeight: 800, fontSize: '1.05rem' }}>{t.price}</div>
+                    </div>
+                  ))}
+                </div>
+                <div className="modal-footer">
+                  <button className="secondary-btn" onClick={() => setShowUpgradeModal(false)}>Cancel</button>
+                  <button
+                    className="primary-btn"
+                    onClick={() => {
+                      if (selectedTier === 'sovereign') { setCurrentPlan('Sovereign Dedicated Cloud'); setPlanPrice('$9,500.00'); }
+                      else if (selectedTier === 'professional') { setCurrentPlan('Professional Platform'); setPlanPrice('$1,850.00'); }
+                      else { setCurrentPlan('Enterprise Cloud Suite'); setPlanPrice('$4,900.00'); }
+                      setShowUpgradeModal(false);
+                      setToastMsg(`Successfully switched plan to ${selectedTier.toUpperCase()} tier!`);
+                      setTimeout(() => setToastMsg(null), 4000);
+                    }}
+                  >
+                    Confirm Plan Selection
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Update Payment Modal */}
+          {showPaymentModal && (
+            <div className="modal-overlay" onClick={() => setShowPaymentModal(false)}>
+              <div className="modal-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+                <div className="modal-header">
+                  <div>
+                    <h3 className="modal-title">Update Payment Method</h3>
+                    <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>Corporate Mastercard / Visa</p>
+                  </div>
+                  <button className="modal-close-btn" onClick={() => setShowPaymentModal(false)}>&times;</button>
+                </div>
+                <form onSubmit={(e) => {
+                  e.preventDefault();
+                  setShowPaymentModal(false);
+                  setToastMsg('Primary corporate payment card updated successfully!');
+                  setTimeout(() => setToastMsg(null), 4000);
+                }}>
+                  <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Name on Card</label>
+                      <input type="text" className="form-input" defaultValue={paymentCard.holder} required />
+                    </div>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label">Card Number</label>
+                      <input type="text" className="form-input" defaultValue={`•••• •••• •••• ${paymentCard.last4}`} required />
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">Expiry</label>
+                        <input type="text" className="form-input" defaultValue={paymentCard.expiry} required />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label className="form-label">CVC</label>
+                        <input type="text" className="form-input" defaultValue="492" required />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="secondary-btn" onClick={() => setShowPaymentModal(false)}>Cancel</button>
+                    <button type="submit" className="primary-btn">Save Payment Method</button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+
+          {/* Toast Notification */}
+          {toastMsg && (
+            <div style={{ position: 'fixed', bottom: '2rem', right: '2rem', zIndex: 9999, backgroundColor: 'var(--dark-navy)', color: '#ffffff', padding: '0.85rem 1.35rem', borderRadius: '10px', boxShadow: '0 10px 25px -5px rgba(15,23,42,0.35)', display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.875rem', fontWeight: 600, border: '1px solid rgba(255,255,255,0.15)' }}>
+              <div style={{ color: '#4ade80' }}><Check size={18} /></div>
+              <div>{toastMsg}</div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+
+</html>
